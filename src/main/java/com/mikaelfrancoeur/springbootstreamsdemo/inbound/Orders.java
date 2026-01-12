@@ -1,7 +1,9 @@
-package com.mikaelfrancoeur.springbootstreamsdemo;
+package com.mikaelfrancoeur.springbootstreamsdemo.inbound;
 
+import com.mikaelfrancoeur.springbootstreamsdemo.domain.Order;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -10,13 +12,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+@Service
 @RequiredArgsConstructor
-class Orders {
+public class Orders {
 
     private final RestClient restClient;
+    @Value("${api.base-url:http://localhost:8080}")
     private final String baseUrl;
 
-    Stream<Order> all(String cursor) {
+    public Stream<Order> all(String cursor) {
         return Stream.iterate(
                         fetchPage(cursor),
                         Objects::nonNull,

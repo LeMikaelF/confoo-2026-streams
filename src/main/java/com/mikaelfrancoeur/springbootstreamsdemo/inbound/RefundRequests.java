@@ -1,22 +1,24 @@
-package com.mikaelfrancoeur.springbootstreamsdemo;
+package com.mikaelfrancoeur.springbootstreamsdemo.inbound;
 
+import com.mikaelfrancoeur.springbootstreamsdemo.domain.RefundRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
-class RefundRequests {
+@Service
+@RequiredArgsConstructor
+public class RefundRequests {
 
     private final RestClient restClient;
+    @Value("${api.base-url:http://localhost:8080}")
     private final String baseUrl;
 
-    RefundRequests(RestClient restClient, String baseUrl) {
-        this.restClient = restClient;
-        this.baseUrl = baseUrl;
-    }
-
-    Stream<RefundRequest> forOrders(Collection<String> orderIds) {
+    public Stream<RefundRequest> forOrders(Collection<String> orderIds) {
         if (orderIds.isEmpty()) {
             return Stream.empty();
         }

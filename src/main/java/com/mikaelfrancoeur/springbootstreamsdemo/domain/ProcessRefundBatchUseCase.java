@@ -1,5 +1,8 @@
-package com.mikaelfrancoeur.springbootstreamsdemo;
+package com.mikaelfrancoeur.springbootstreamsdemo.domain;
 
+import com.mikaelfrancoeur.springbootstreamsdemo.inbound.Orders;
+import com.mikaelfrancoeur.springbootstreamsdemo.inbound.RefundRequests;
+import com.mikaelfrancoeur.springbootstreamsdemo.outbound.RefundProcessor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +18,7 @@ public class ProcessRefundBatchUseCase {
 
     private final Orders orders;
     private final RefundRequests refundRequests;
-    private final Refunds refunds;
+    private final RefundProcessor refundProcessor;
 
     public List<RefundRequest> execute(int refundsToProcess, String startCursor) {
         List<RefundRequest> collected = orders.all(startCursor)
@@ -35,7 +38,7 @@ public class ProcessRefundBatchUseCase {
                 }
             );
 
-        refunds.process(collected);
+        refundProcessor.process(collected);
         return collected;
     }
 }

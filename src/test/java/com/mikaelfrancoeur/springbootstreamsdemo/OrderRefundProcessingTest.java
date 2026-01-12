@@ -1,5 +1,10 @@
 package com.mikaelfrancoeur.springbootstreamsdemo;
 
+import com.mikaelfrancoeur.springbootstreamsdemo.domain.ProcessRefundBatchUseCase;
+import com.mikaelfrancoeur.springbootstreamsdemo.domain.RefundRequest;
+import com.mikaelfrancoeur.springbootstreamsdemo.inbound.Orders;
+import com.mikaelfrancoeur.springbootstreamsdemo.inbound.RefundRequests;
+import com.mikaelfrancoeur.springbootstreamsdemo.outbound.RefundProcessor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -29,7 +34,7 @@ class OrderRefundProcessingTest {
     @Autowired
     private RestClient.Builder sharedBuilder;
     @MockitoBean
-    private Refunds refunds;
+    private RefundProcessor refundProcessor;
 
     private MockRestServiceServer server;
     private ProcessRefundBatchUseCase processRefundBatchUseCase;
@@ -40,7 +45,7 @@ class OrderRefundProcessingTest {
         RestClient restClient = sharedBuilder.build();
         Orders orders = new Orders(restClient, "http://localhost:8080");
         RefundRequests refundRequests = new RefundRequests(restClient, "http://localhost:8080");
-        processRefundBatchUseCase = new ProcessRefundBatchUseCase(orders, refundRequests, refunds);
+        processRefundBatchUseCase = new ProcessRefundBatchUseCase(orders, refundRequests, refundProcessor);
     }
 
     @Test
@@ -76,7 +81,7 @@ class OrderRefundProcessingTest {
         // Verify repository was called with exactly 10 refunds
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Collection<RefundRequest>> captor = ArgumentCaptor.forClass(Collection.class);
-        verify(refunds).process(captor.capture());
+        verify(refundProcessor).process(captor.capture());
         assertThat(captor.getValue()).hasSize(10);
 
         server.verify();
