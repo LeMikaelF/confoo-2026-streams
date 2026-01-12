@@ -1,4 +1,4 @@
-package com.mikaelfrancoeur.springbootstreamsdemo;
+package com.mikaelfrancoeur.springbootstreamsdemo.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
