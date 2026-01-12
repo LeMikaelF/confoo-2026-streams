@@ -30,21 +30,11 @@ class StreamsTest {
 
     @Autowired
     private RestClient.Builder sharedBuilder;
-    private MockRestServiceServer server;
-
-    @TestConfiguration
-    static class TestConfig {
-        @Bean
-        @Primary
-        RestClient.Builder testRestClientBuilder() {
-            return RestClient.builder();
-        }
-    }
-
-    private RefundProcessor refundProcessor;
-
     @MockitoBean
     private RefundsRepository refundsRepository;
+
+    private MockRestServiceServer server;
+    private RefundProcessor refundProcessor;
 
     @BeforeEach
     void setUp() {
