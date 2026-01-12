@@ -1,0 +1,7 @@
+{
+  "refundRequests": [
+    {"id": "refund-1", "orderId": "order-1", "amount": 100.00, "reason": "Damaged product"},
+    {"id": "refund-2", "orderId": "order-2", "amount": 150.00, "reason": "Wrong item"},
+    {"id": "refund-3", "orderId": "order-3", "amount": 200.00, "reason": "Late delivery"}
+  ]
+}

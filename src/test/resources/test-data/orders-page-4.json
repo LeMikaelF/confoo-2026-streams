@@ -1,0 +1,10 @@
+{
+  "orders": [
+    {"id": "order-16", "customerId": "cust-16", "amount": 140.00, "status": "COMPLETED"},
+    {"id": "order-17", "customerId": "cust-17", "amount": 190.00, "status": "COMPLETED"},
+    {"id": "order-18", "customerId": "cust-18", "amount": 230.00, "status": "COMPLETED"},
+    {"id": "order-19", "customerId": "cust-19", "amount": 105.00, "status": "COMPLETED"},
+    {"id": "order-20", "customerId": "cust-20", "amount": 380.00, "status": "COMPLETED"}
+  ],
+  "nextCursor": "cursor4"
+}

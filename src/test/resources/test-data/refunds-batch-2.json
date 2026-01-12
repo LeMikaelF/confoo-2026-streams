@@ -1,0 +1,10 @@
+{
+  "refundRequests": [
+    {"id": "refund-7", "orderId": "order-6", "amount": 125.00, "reason": "Customer changed mind"},
+    {"id": "refund-8", "orderId": "order-7", "amount": 180.00, "reason": "Wrong size"},
+    {"id": "refund-9", "orderId": "order-8", "amount": 220.00, "reason": "Color mismatch"},
+    {"id": "refund-10", "orderId": "order-9", "amount": 95.00, "reason": "Quality issues"},
+    {"id": "refund-11", "orderId": "order-10", "amount": 350.00, "reason": "Never arrived"},
+    {"id": "refund-12", "orderId": "order-10", "amount": 100.00, "reason": "Duplicate order"}
+  ]
+}
