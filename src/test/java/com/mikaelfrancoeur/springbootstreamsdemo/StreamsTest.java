@@ -3,6 +3,7 @@ package com.mikaelfrancoeur.springbootstreamsdemo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -27,16 +28,16 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 @SpringBootTest
 class StreamsTest {
 
-    private static RestClient.Builder sharedBuilder;
-    private static MockRestServiceServer server;
+    @Autowired
+    private RestClient.Builder sharedBuilder;
+    private MockRestServiceServer server;
 
     @TestConfiguration
     static class TestConfig {
         @Bean
         @Primary
         RestClient.Builder testRestClientBuilder() {
-            sharedBuilder = RestClient.builder();
-            return sharedBuilder;
+            return RestClient.builder();
         }
     }
 
