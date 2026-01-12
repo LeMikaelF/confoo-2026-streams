@@ -32,7 +32,7 @@ class RefundConfig {
     }
 
     @Bean
-    RefundsProcessor refundsRepository() {
-        return new RefundsProcessor();
+    Refunds refundsRepository() {
+        return new Refunds();
     }
 }

@@ -15,7 +15,7 @@ public class RefundProcessor {
 
     private final Orders orders;
     private final RefundRequests refundRequests;
-    private final RefundsProcessor refundsProcessor;
+    private final Refunds refunds;
 
     public List<RefundRequest> processRefundBatch(int batchSize, String startCursor) {
         List<RefundRequest> collected = orders.all(startCursor)
@@ -35,7 +35,7 @@ public class RefundProcessor {
                 }
             );
 
-        refundsProcessor.processRefunds(collected);
+        refunds.process(collected);
         return collected;
     }
 }
