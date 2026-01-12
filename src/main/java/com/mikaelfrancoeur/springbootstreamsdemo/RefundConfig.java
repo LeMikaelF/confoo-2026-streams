@@ -1,7 +1,6 @@
 package com.mikaelfrancoeur.springbootstreamsdemo;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
@@ -13,7 +12,6 @@ class RefundConfig {
     private String baseUrl;
 
     @Bean
-    @ConditionalOnMissingBean
     RestClient.Builder restClientBuilder() {
         return RestClient.builder();
     }
@@ -34,7 +32,7 @@ class RefundConfig {
     }
 
     @Bean
-    RefundsRepository refundsRepository() {
-        return new RefundsRepository();
+    RefundsProcessor refundsRepository() {
+        return new RefundsProcessor();
     }
 }

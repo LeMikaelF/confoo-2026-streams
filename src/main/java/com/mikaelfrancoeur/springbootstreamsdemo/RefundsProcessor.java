@@ -2,7 +2,7 @@ package com.mikaelfrancoeur.springbootstreamsdemo;
 
 import java.util.Collection;
 
-class RefundsRepository {
+class RefundsProcessor {
 
     void processRefunds(Collection<RefundRequest> refunds) {
         refunds.forEach(refund ->

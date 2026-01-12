@@ -1,6 +1,8 @@
 package com.mikaelfrancoeur.springbootstreamsdemo;
 
 import io.micrometer.common.util.StringUtils;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -8,15 +10,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+@RequiredArgsConstructor
 class Orders {
 
     private final RestClient restClient;
     private final String baseUrl;
-
-    Orders(RestClient restClient, String baseUrl) {
-        this.restClient = restClient;
-        this.baseUrl = baseUrl;
-    }
 
     Stream<Order> all(String cursor) {
         return Stream.iterate(

@@ -29,7 +29,7 @@ class StreamsTest {
     @Autowired
     private RestClient.Builder sharedBuilder;
     @MockitoBean
-    private RefundsRepository refundsRepository;
+    private RefundsProcessor refundsProcessor;
 
     private MockRestServiceServer server;
     private RefundProcessor refundProcessor;
@@ -40,7 +40,7 @@ class StreamsTest {
         RestClient restClient = sharedBuilder.build();
         Orders orders = new Orders(restClient, "http://localhost:8080");
         RefundRequests refundRequests = new RefundRequests(restClient, "http://localhost:8080");
-        refundProcessor = new RefundProcessor(orders, refundRequests, refundsRepository);
+        refundProcessor = new RefundProcessor(orders, refundRequests, refundsProcessor);
     }
 
     @Test
@@ -76,7 +76,7 @@ class StreamsTest {
         // Verify repository was called with exactly 10 refunds
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Collection<RefundRequest>> captor = ArgumentCaptor.forClass(Collection.class);
-        verify(refundsRepository).processRefunds(captor.capture());
+        verify(refundsProcessor).processRefunds(captor.capture());
         assertThat(captor.getValue()).hasSize(10);
 
         server.verify();
