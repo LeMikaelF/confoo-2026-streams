@@ -32,7 +32,7 @@ class OrderRefundProcessingTest {
     private Refunds refunds;
 
     private MockRestServiceServer server;
-    private RefundProcessor refundProcessor;
+    private ProcessRefundBatchUseCase processRefundBatchUseCase;
 
     @BeforeEach
     void setUp() {
@@ -40,7 +40,7 @@ class OrderRefundProcessingTest {
         RestClient restClient = sharedBuilder.build();
         Orders orders = new Orders(restClient, "http://localhost:8080");
         RefundRequests refundRequests = new RefundRequests(restClient, "http://localhost:8080");
-        refundProcessor = new RefundProcessor(orders, refundRequests, refunds);
+        processRefundBatchUseCase = new ProcessRefundBatchUseCase(orders, refundRequests, refunds);
     }
 
     @Test
@@ -66,7 +66,7 @@ class OrderRefundProcessingTest {
                 .andExpect(method(HttpMethod.POST))
                 .andRespond(withSuccess(loadJson("refunds-batch-1.json"), MediaType.APPLICATION_JSON));
 
-        var result = refundProcessor.processRefundBatch(5, null);
+        var result = processRefundBatchUseCase.execute(10, null);
 
         assertThat(result)
                 .extracting(RefundRequest::id)
@@ -99,7 +99,7 @@ class OrderRefundProcessingTest {
                 .andExpect(method(HttpMethod.POST))
                 .andRespond(withSuccess(loadJson("refunds-batch-small.json"), MediaType.APPLICATION_JSON));
 
-        var result = refundProcessor.processRefundBatch(5, null);
+        var result = processRefundBatchUseCase.execute(10, null);
 
         assertThat(result).hasSize(6);
 
@@ -133,7 +133,7 @@ class OrderRefundProcessingTest {
                 .andExpect(method(HttpMethod.POST))
                 .andRespond(withSuccess(loadJson("refunds-batch-small.json"), MediaType.APPLICATION_JSON));
 
-        var result = refundProcessor.processRefundBatch(5, null);
+        var result = processRefundBatchUseCase.execute(10, null);
 
         assertThat(result).hasSize(9);
 
@@ -153,7 +153,7 @@ class OrderRefundProcessingTest {
                 .andExpect(method(HttpMethod.POST))
                 .andRespond(withSuccess(loadJson("refunds-batch-large.json"), MediaType.APPLICATION_JSON));
 
-        var result = refundProcessor.processRefundBatch(5, null);
+        var result = processRefundBatchUseCase.execute(10, null);
 
         assertThat(result).hasSize(10);
         assertThat(result).extracting(RefundRequest::id)

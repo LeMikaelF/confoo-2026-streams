@@ -9,20 +9,20 @@ import java.util.stream.Gatherers;
 
 @Service
 @RequiredArgsConstructor
-public class RefundProcessor {
+public class ProcessRefundBatchUseCase {
 
-    private static final int REFUND_LIMIT = 10;
+    public static final int BATCH_SIZE = 5;
 
     private final Orders orders;
     private final RefundRequests refundRequests;
     private final Refunds refunds;
 
-    public List<RefundRequest> processRefundBatch(int batchSize, String startCursor) {
+    public List<RefundRequest> execute(int refundsToProcess, String startCursor) {
         List<RefundRequest> collected = orders.all(startCursor)
             .map(Order::id)
-            .gather(Gatherers.windowFixed(batchSize))
+            .gather(Gatherers.windowFixed(BATCH_SIZE))
             .flatMap(refundRequests::forOrders)
-            .limit(REFUND_LIMIT)
+            .limit(refundsToProcess)
             .reduce(
                 new ArrayList<>(),
                 (acc, refund) -> {
