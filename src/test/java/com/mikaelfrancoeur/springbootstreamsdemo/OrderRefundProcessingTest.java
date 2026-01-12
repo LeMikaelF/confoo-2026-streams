@@ -24,7 +24,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 @SpringBootTest
-class StreamsTest {
+class OrderRefundProcessingTest {
 
     @Autowired
     private RestClient.Builder sharedBuilder;
