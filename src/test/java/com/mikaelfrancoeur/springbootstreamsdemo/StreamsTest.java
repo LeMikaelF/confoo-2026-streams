@@ -22,6 +22,8 @@ import java.util.Collection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.client.ExpectedCount.once;
+import static org.springframework.test.web.client.ExpectedCount.twice;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
@@ -57,14 +59,14 @@ class StreamsTest {
         // 4. Batch 5 orders -> call refunds API (6 more refunds, 12 total)
         // 5. limit(10) stops the stream - pages 3-5 NOT fetched
 
-        server.expect(ExpectedCount.once(), requestTo("http://localhost:8080/api/orders"))
+        server.expect(once(), requestTo("http://localhost:8080/api/orders"))
             .andRespond(withSuccess(loadJson("orders-page-1.json"), MediaType.APPLICATION_JSON));
 
-        server.expect(ExpectedCount.once(), requestTo("http://localhost:8080/api/orders?lastCursor=cursor1"))
+        server.expect(once(), requestTo("http://localhost:8080/api/orders?lastCursor=cursor1"))
             .andRespond(withSuccess(loadJson("orders-page-2.json"), MediaType.APPLICATION_JSON));
 
         // Two refund API calls (one per batch of 5 orders)
-        server.expect(ExpectedCount.twice(), requestTo("http://localhost:8080/api/refunds/pending"))
+        server.expect(twice(), requestTo("http://localhost:8080/api/refunds/pending"))
             .andExpect(method(HttpMethod.POST))
             .andRespond(withSuccess(loadJson("refunds-batch-1.json"), MediaType.APPLICATION_JSON));
 
@@ -90,14 +92,14 @@ class StreamsTest {
         // Refund batches return 3 each (6 total) - less than limit of 10
         // Stream should consume all pages since we need more but can't get them
 
-        server.expect(ExpectedCount.once(), requestTo("http://localhost:8080/api/orders"))
+        server.expect(once(), requestTo("http://localhost:8080/api/orders"))
             .andRespond(withSuccess(loadJson("orders-page-1.json"), MediaType.APPLICATION_JSON));
 
-        server.expect(ExpectedCount.once(), requestTo("http://localhost:8080/api/orders?lastCursor=cursor1"))
+        server.expect(once(), requestTo("http://localhost:8080/api/orders?lastCursor=cursor1"))
             .andRespond(withSuccess(loadJson("orders-page-last.json"), MediaType.APPLICATION_JSON));
 
         // Two refund API calls, each returning 3 refunds
-        server.expect(ExpectedCount.twice(), requestTo("http://localhost:8080/api/refunds/pending"))
+        server.expect(twice(), requestTo("http://localhost:8080/api/refunds/pending"))
             .andExpect(method(HttpMethod.POST))
             .andRespond(withSuccess(loadJson("refunds-batch-small.json"), MediaType.APPLICATION_JSON));
 
@@ -113,25 +115,25 @@ class StreamsTest {
         // Setup: 3 pages of orders, but first batch of refunds is empty
         // Stream should continue processing next batches
 
-        server.expect(ExpectedCount.once(), requestTo("http://localhost:8080/api/orders"))
+        server.expect(once(), requestTo("http://localhost:8080/api/orders"))
             .andRespond(withSuccess(loadJson("orders-page-1.json"), MediaType.APPLICATION_JSON));
 
-        server.expect(ExpectedCount.once(), requestTo("http://localhost:8080/api/orders?lastCursor=cursor1"))
+        server.expect(once(), requestTo("http://localhost:8080/api/orders?lastCursor=cursor1"))
             .andRespond(withSuccess(loadJson("orders-page-2.json"), MediaType.APPLICATION_JSON));
 
-        server.expect(ExpectedCount.once(), requestTo("http://localhost:8080/api/orders?lastCursor=cursor2"))
+        server.expect(once(), requestTo("http://localhost:8080/api/orders?lastCursor=cursor2"))
             .andRespond(withSuccess(loadJson("orders-page-last.json"), MediaType.APPLICATION_JSON));
 
         // First batch -> empty, second -> 6, third -> 3 (total 9)
-        server.expect(ExpectedCount.once(), requestTo("http://localhost:8080/api/refunds/pending"))
+        server.expect(once(), requestTo("http://localhost:8080/api/refunds/pending"))
             .andExpect(method(HttpMethod.POST))
             .andRespond(withSuccess(loadJson("refunds-batch-empty.json"), MediaType.APPLICATION_JSON));
 
-        server.expect(ExpectedCount.once(), requestTo("http://localhost:8080/api/refunds/pending"))
+        server.expect(once(), requestTo("http://localhost:8080/api/refunds/pending"))
             .andExpect(method(HttpMethod.POST))
             .andRespond(withSuccess(loadJson("refunds-batch-1.json"), MediaType.APPLICATION_JSON));
 
-        server.expect(ExpectedCount.once(), requestTo("http://localhost:8080/api/refunds/pending"))
+        server.expect(once(), requestTo("http://localhost:8080/api/refunds/pending"))
             .andExpect(method(HttpMethod.POST))
             .andRespond(withSuccess(loadJson("refunds-batch-small.json"), MediaType.APPLICATION_JSON));
 
@@ -147,11 +149,11 @@ class StreamsTest {
         // Setup: 1 page with 5 orders, first batch returns 15 refunds
         // Only 10 should be returned
 
-        server.expect(ExpectedCount.once(), requestTo("http://localhost:8080/api/orders"))
+        server.expect(once(), requestTo("http://localhost:8080/api/orders"))
             .andRespond(withSuccess(loadJson("orders-page-last.json"), MediaType.APPLICATION_JSON));
 
         // Single batch returns 15 refunds, but we only need 10
-        server.expect(ExpectedCount.once(), requestTo("http://localhost:8080/api/refunds/pending"))
+        server.expect(once(), requestTo("http://localhost:8080/api/refunds/pending"))
             .andExpect(method(HttpMethod.POST))
             .andRespond(withSuccess(loadJson("refunds-batch-large.json"), MediaType.APPLICATION_JSON));
 
