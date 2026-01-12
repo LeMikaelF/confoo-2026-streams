@@ -37,7 +37,7 @@ class Orders {
                 .body(Page.class);
     }
 
-    record Page(List<Order> orders, String nextCursor) {
+    private record Page(List<Order> orders, String nextCursor) {
         boolean hasMore() {
             return !StringUtils.isBlank(nextCursor);
         }

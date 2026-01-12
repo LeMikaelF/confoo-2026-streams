@@ -22,13 +22,17 @@ class RefundRequests {
         }
 
         var response = restClient.post()
-            .uri(baseUrl + "/api/refunds/pending")
-            .body(new RefundRequestQuery(orderIds.stream().toList()))
-            .retrieve()
-            .body(RefundRequestsResponse.class);
+                .uri(baseUrl + "/api/refunds/pending")
+                .body(new RefundRequestQuery(orderIds.stream().toList()))
+                .retrieve()
+                .body(RefundRequestsResponse.class);
 
         return response != null ? response.refundRequests().stream() : Stream.empty();
     }
 
-    record RefundRequestQuery(List<String> orderIds) {}
+    private record RefundRequestQuery(List<String> orderIds) {
+    }
+
+    private record RefundRequestsResponse(List<RefundRequest> refundRequests) {
+    }
 }
