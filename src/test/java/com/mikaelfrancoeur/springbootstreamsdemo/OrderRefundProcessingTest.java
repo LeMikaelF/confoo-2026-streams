@@ -7,7 +7,6 @@ import com.mikaelfrancoeur.springbootstreamsdemo.inbound.RefundRequests;
 import com.mikaelfrancoeur.springbootstreamsdemo.outbound.RefundProcessor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -19,20 +18,21 @@ import org.springframework.web.client.RestClient;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Collection;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.assertArg;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.client.ExpectedCount.once;
 import static org.springframework.test.web.client.ExpectedCount.twice;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 @SpringBootTest
 class OrderRefundProcessingTest {
 
     @Autowired
-    private RestClient.Builder sharedBuilder;
+    private RestClient.Builder restClientBuilder;
     @MockitoBean
     private RefundProcessor refundProcessor;
 
@@ -41,8 +41,8 @@ class OrderRefundProcessingTest {
 
     @BeforeEach
     void setUp() {
-        server = MockRestServiceServer.bindTo(sharedBuilder).ignoreExpectOrder(true).build();
-        RestClient restClient = sharedBuilder.build();
+        server = MockRestServiceServer.bindTo(restClientBuilder).ignoreExpectOrder(true).build();
+        RestClient restClient = restClientBuilder.build();
         Orders orders = new Orders(restClient, "http://localhost:8080");
         RefundRequests refundRequests = new RefundRequests(restClient, "http://localhost:8080");
         processRefundBatchUseCase = new ProcessRefundBatchUseCase(orders, refundRequests, refundProcessor);
@@ -78,12 +78,7 @@ class OrderRefundProcessingTest {
                 .containsExactly("refund-1", "refund-2", "refund-3", "refund-4", "refund-5",
                         "refund-6", "refund-1", "refund-2", "refund-3", "refund-4");
 
-        // Verify repository was called with exactly 10 refunds
-        @SuppressWarnings("unchecked")
-        ArgumentCaptor<Collection<RefundRequest>> captor = ArgumentCaptor.forClass(Collection.class);
-        verify(refundProcessor).process(captor.capture());
-        assertThat(captor.getValue()).hasSize(10);
-
+        verify(refundProcessor).process(assertArg(refundRequest -> assertThat(refundRequest).hasSize(10)));
         server.verify();
     }
 
@@ -107,7 +102,7 @@ class OrderRefundProcessingTest {
         var result = processRefundBatchUseCase.execute(10, null);
 
         assertThat(result).hasSize(6);
-
+        verify(refundProcessor).process(assertArg(refundRequest -> assertThat(refundRequest).hasSize(6)));
         server.verify();
     }
 
@@ -141,7 +136,7 @@ class OrderRefundProcessingTest {
         var result = processRefundBatchUseCase.execute(10, null);
 
         assertThat(result).hasSize(9);
-
+        verify(refundProcessor).process(assertArg(refundRequest -> assertThat(refundRequest).hasSize(9)));
         server.verify();
     }
 
@@ -164,7 +159,7 @@ class OrderRefundProcessingTest {
         assertThat(result).extracting(RefundRequest::id)
                 .containsExactly("refund-1", "refund-2", "refund-3", "refund-4", "refund-5",
                         "refund-6", "refund-7", "refund-8", "refund-9", "refund-10");
-
+        verify(refundProcessor).process(assertArg(refundRequest -> assertThat(refundRequest).hasSize(10)));
         server.verify();
     }
 
