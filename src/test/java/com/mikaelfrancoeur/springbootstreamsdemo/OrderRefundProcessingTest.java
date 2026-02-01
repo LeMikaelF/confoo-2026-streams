@@ -23,7 +23,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.assertArg;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.client.ExpectedCount.once;
+import static org.springframework.test.web.client.ExpectedCount.times;
 import static org.springframework.test.web.client.ExpectedCount.twice;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
@@ -50,15 +52,16 @@ class OrderRefundProcessingTest {
 
     @Test
     void lazinessVerification_streamStopsEarlyWhenLimitReached() throws Exception {
-        // Setup: 5 pages of orders available, but first 2 refund batches return 12 refunds
-        // The stream should stop after getting 10, not fetching pages 3-5
+        // Pages 1-3 have 3 COMPLETED each, page 4 has 5 COMPLETED = 14 total COMPLETED
+        // windowFixed(5) batching with filter:
+        //   Page 1: 3 COMPLETED IDs (buffer: 3, no batch yet)
+        //   Page 2: 3 more (buffer: 6 -> emit batch of 5, carry 1)
+        //   Page 3: 3 more (buffer: 4, no batch yet)
+        //   Page 4: 5 more (buffer: 9 -> emit batch of 5, carry 4)
+        // 2 refund API calls x 6 refunds each = 12 total, limit(10) -> 10
+        // Page 5 is NOT fetched (laziness)
         //
-        // Stream flow with lazy evaluation:
-        // 1. Fetch page 1 (5 orders)
-        // 2. Batch 5 orders -> call refunds API (6 refunds)
-        // 3. Need more, fetch page 2 (5 more orders)
-        // 4. Batch 5 orders -> call refunds API (6 more refunds, 12 total)
-        // 5. limit(10) stops the stream - pages 3-5 NOT fetched
+        // Without filter: 5 orders/page -> batch every page -> different fetch pattern
 
         server.expect(once(), requestTo("http://localhost:8080/api/orders"))
                 .andRespond(withSuccess(loadJson("orders-page-1.json"), MediaType.APPLICATION_JSON));
@@ -66,7 +69,13 @@ class OrderRefundProcessingTest {
         server.expect(once(), requestTo("http://localhost:8080/api/orders?lastCursor=cursor1"))
                 .andRespond(withSuccess(loadJson("orders-page-2.json"), MediaType.APPLICATION_JSON));
 
-        // Two refund API calls (one per batch of 5 orders)
+        server.expect(once(), requestTo("http://localhost:8080/api/orders?lastCursor=cursor2"))
+                .andRespond(withSuccess(loadJson("orders-page-3.json"), MediaType.APPLICATION_JSON));
+
+        server.expect(once(), requestTo("http://localhost:8080/api/orders?lastCursor=cursor3"))
+                .andRespond(withSuccess(loadJson("orders-page-4.json"), MediaType.APPLICATION_JSON));
+
+        // Two refund API calls (one per batch of 5 COMPLETED order IDs)
         server.expect(twice(), requestTo("http://localhost:8080/api/refunds/pending"))
                 .andExpect(method(HttpMethod.POST))
                 .andRespond(withSuccess(loadJson("refunds-batch-1.json"), MediaType.APPLICATION_JSON));
@@ -84,14 +93,19 @@ class OrderRefundProcessingTest {
 
     @Test
     void allPagesConsumed_whenNotEnoughRefunds() throws Exception {
-        // Setup: 2 pages of orders (last page has no next cursor)
-        // Refund batches return 3 each (6 total) - less than limit of 10
-        // Stream should consume all pages since we need more but can't get them
+        // Pages 1, 2, page-last: 3 COMPLETED each = 9 total COMPLETED
+        // windowFixed(5): batch of 5 + partial batch of 4 = 2 refund calls
+        // Each returns 3 refunds -> 6 total (under limit of 10)
+        //
+        // Without filter: 15 orders -> 3 batches of 5 -> 3 refund calls -> server.verify() fails
 
         server.expect(once(), requestTo("http://localhost:8080/api/orders"))
                 .andRespond(withSuccess(loadJson("orders-page-1.json"), MediaType.APPLICATION_JSON));
 
         server.expect(once(), requestTo("http://localhost:8080/api/orders?lastCursor=cursor1"))
+                .andRespond(withSuccess(loadJson("orders-page-2.json"), MediaType.APPLICATION_JSON));
+
+        server.expect(once(), requestTo("http://localhost:8080/api/orders?lastCursor=cursor2"))
                 .andRespond(withSuccess(loadJson("orders-page-last.json"), MediaType.APPLICATION_JSON));
 
         // Two refund API calls, each returning 3 refunds
@@ -108,8 +122,11 @@ class OrderRefundProcessingTest {
 
     @Test
     void emptyRefundBatches_streamContinuesUntilLimitOrExhausted() throws Exception {
-        // Setup: 3 pages of orders, but first batch of refunds is empty
-        // Stream should continue processing next batches
+        // Pages 1, 2, 3, page-last: 3 COMPLETED each = 12 total COMPLETED
+        // windowFixed(5): batch of 5, batch of 5, partial batch of 2 = 3 refund calls
+        // Returns: empty + 6 + 3 = 9 total (under limit of 10)
+        //
+        // Without filter: 20 orders -> 4 batches of 5 -> 4 refund calls -> server.verify() fails
 
         server.expect(once(), requestTo("http://localhost:8080/api/orders"))
                 .andRespond(withSuccess(loadJson("orders-page-1.json"), MediaType.APPLICATION_JSON));
@@ -118,6 +135,9 @@ class OrderRefundProcessingTest {
                 .andRespond(withSuccess(loadJson("orders-page-2.json"), MediaType.APPLICATION_JSON));
 
         server.expect(once(), requestTo("http://localhost:8080/api/orders?lastCursor=cursor2"))
+                .andRespond(withSuccess(loadJson("orders-page-3.json"), MediaType.APPLICATION_JSON));
+
+        server.expect(once(), requestTo("http://localhost:8080/api/orders?lastCursor=cursor3"))
                 .andRespond(withSuccess(loadJson("orders-page-last.json"), MediaType.APPLICATION_JSON));
 
         // First batch -> empty, second -> 6, third -> 3 (total 9)
@@ -142,15 +162,18 @@ class OrderRefundProcessingTest {
 
     @Test
     void singlePageSufficient_firstBatchHasEnoughRefunds() throws Exception {
-        // Setup: 1 page with 5 orders, first batch returns 15 refunds
-        // Only 10 should be returned
+        // page-last only: 3 COMPLETED out of 5 orders
+        // windowFixed(5): partial batch of 3 -> 1 refund call -> 15 refunds -> limit(10) = 10
+        //
+        // Without filter: batch of 5 order IDs sent -> content assertion fails (expects 3)
 
         server.expect(once(), requestTo("http://localhost:8080/api/orders"))
                 .andRespond(withSuccess(loadJson("orders-page-last.json"), MediaType.APPLICATION_JSON));
 
-        // Single batch returns 15 refunds, but we only need 10
+        // Verify that only the 3 COMPLETED order IDs are sent in the request body
         server.expect(once(), requestTo("http://localhost:8080/api/refunds/pending"))
                 .andExpect(method(HttpMethod.POST))
+                .andExpect(content().json("{\"orderIds\":[\"order-1\",\"order-3\",\"order-5\"]}"))
                 .andRespond(withSuccess(loadJson("refunds-batch-large.json"), MediaType.APPLICATION_JSON));
 
         var result = processRefundBatchUseCase.execute(10, null);

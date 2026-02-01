@@ -22,21 +22,12 @@ public class ProcessRefundBatchUseCase {
 
     public List<RefundRequest> execute(int refundsToProcess, String startCursor) {
         List<RefundRequest> collected = orders.all(startCursor)
-            .map(Order::id)
-            .gather(Gatherers.windowFixed(BATCH_SIZE))
-            .flatMap(refundRequests::forOrders)
-            .limit(refundsToProcess)
-            .reduce(
-                new ArrayList<>(),
-                (acc, refund) -> {
-                    acc.add(refund);
-                    return acc;
-                },
-                (left, right) -> {
-                    left.addAll(right);
-                    return left;
-                }
-            );
+                .filter(order -> "COMPLETED".equals(order.status()))
+                .map(Order::id)
+                .gather(Gatherers.windowFixed(BATCH_SIZE))
+                .flatMap(refundRequests::forOrders)
+                .limit(refundsToProcess)
+                .toList();
 
         refundProcessor.process(collected);
         return collected;

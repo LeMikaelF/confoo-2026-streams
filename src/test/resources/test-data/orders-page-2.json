@@ -1,9 +1,9 @@
 {
   "orders": [
     {"id": "order-6", "customerId": "cust-6", "amount": 125.00, "status": "COMPLETED"},
-    {"id": "order-7", "customerId": "cust-7", "amount": 180.00, "status": "COMPLETED"},
+    {"id": "order-7", "customerId": "cust-7", "amount": 180.00, "status": "PENDING"},
     {"id": "order-8", "customerId": "cust-8", "amount": 220.00, "status": "COMPLETED"},
-    {"id": "order-9", "customerId": "cust-9", "amount": 95.00, "status": "COMPLETED"},
+    {"id": "order-9", "customerId": "cust-9", "amount": 95.00, "status": "CANCELLED"},
     {"id": "order-10", "customerId": "cust-10", "amount": 350.00, "status": "COMPLETED"}
   ],
   "nextCursor": "cursor2"
