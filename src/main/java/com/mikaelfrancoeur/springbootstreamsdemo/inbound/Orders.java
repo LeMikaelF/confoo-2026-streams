@@ -2,6 +2,7 @@ package com.mikaelfrancoeur.springbootstreamsdemo.inbound;
 
 import com.mikaelfrancoeur.springbootstreamsdemo.domain.Order;
 import io.micrometer.common.util.StringUtils;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -20,16 +21,16 @@ public class Orders {
     @Value("${api.base-url:http://localhost:8080}")
     private final String baseUrl;
 
-    public Stream<Order> all(String cursor) {
+    public Stream<Order> all() {
         return Stream.iterate(
-                        fetchPage(cursor),
+                        fetchPage(null),
                         Objects::nonNull,
                         page -> page.hasMore() ? fetchPage(page.nextCursor()) : null
                 )
                 .flatMap(page -> page.orders().stream());
     }
 
-    private Page fetchPage(String cursor) {
+    private Page fetchPage(@Nullable String cursor) {
         var uri = UriComponentsBuilder.fromUriString(baseUrl + "/api/orders");
         if (cursor != null && !cursor.isBlank()) {
             uri.queryParam("lastCursor", cursor);

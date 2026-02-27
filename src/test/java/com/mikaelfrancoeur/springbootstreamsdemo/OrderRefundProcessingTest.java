@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.assertArg;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.client.ExpectedCount.once;
-import static org.springframework.test.web.client.ExpectedCount.times;
 import static org.springframework.test.web.client.ExpectedCount.twice;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
@@ -80,7 +79,7 @@ class OrderRefundProcessingTest {
                 .andExpect(method(HttpMethod.POST))
                 .andRespond(withSuccess(loadJson("refunds-batch-1.json"), MediaType.APPLICATION_JSON));
 
-        var result = processRefundBatchUseCase.execute(10, null);
+        var result = processRefundBatchUseCase.execute(10);
 
         assertThat(result)
                 .extracting(RefundRequest::id)
@@ -113,7 +112,7 @@ class OrderRefundProcessingTest {
                 .andExpect(method(HttpMethod.POST))
                 .andRespond(withSuccess(loadJson("refunds-batch-small.json"), MediaType.APPLICATION_JSON));
 
-        var result = processRefundBatchUseCase.execute(10, null);
+        var result = processRefundBatchUseCase.execute(10);
 
         assertThat(result).hasSize(6);
         verify(refundProcessor).process(assertArg(refundRequest -> assertThat(refundRequest).hasSize(6)));
@@ -153,7 +152,7 @@ class OrderRefundProcessingTest {
                 .andExpect(method(HttpMethod.POST))
                 .andRespond(withSuccess(loadJson("refunds-batch-small.json"), MediaType.APPLICATION_JSON));
 
-        var result = processRefundBatchUseCase.execute(10, null);
+        var result = processRefundBatchUseCase.execute(10);
 
         assertThat(result).hasSize(9);
         verify(refundProcessor).process(assertArg(refundRequest -> assertThat(refundRequest).hasSize(9)));
@@ -176,7 +175,7 @@ class OrderRefundProcessingTest {
                 .andExpect(content().json("{\"orderIds\":[\"order-1\",\"order-3\",\"order-5\"]}"))
                 .andRespond(withSuccess(loadJson("refunds-batch-large.json"), MediaType.APPLICATION_JSON));
 
-        var result = processRefundBatchUseCase.execute(10, null);
+        var result = processRefundBatchUseCase.execute(10);
 
         assertThat(result).hasSize(10);
         assertThat(result).extracting(RefundRequest::id)

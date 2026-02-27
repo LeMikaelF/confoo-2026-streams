@@ -20,8 +20,8 @@ public class ProcessRefundBatchUseCase {
     private final RefundRequests refundRequests;
     private final RefundProcessor refundProcessor;
 
-    public List<RefundRequest> execute(int refundsToProcess, String startCursor) {
-        List<RefundRequest> collected = orders.all(startCursor)
+    public List<RefundRequest> execute(int refundsToProcess) {
+        List<RefundRequest> collected = orders.all()
                 .filter(Order::isCompleted)
                 .map(Order::id)
                 .gather(Gatherers.windowFixed(BATCH_SIZE))
