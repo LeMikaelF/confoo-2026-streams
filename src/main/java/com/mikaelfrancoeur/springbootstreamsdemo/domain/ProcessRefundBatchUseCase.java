@@ -22,7 +22,7 @@ public class ProcessRefundBatchUseCase {
 
     public List<RefundRequest> execute(int refundsToProcess, String startCursor) {
         List<RefundRequest> collected = orders.all(startCursor)
-                .filter(order -> "COMPLETED".equals(order.status()))
+                .filter(Order::isCompleted)
                 .map(Order::id)
                 .gather(Gatherers.windowFixed(BATCH_SIZE))
                 .flatMap(refundRequests::forOrders)
